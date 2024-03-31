@@ -6,6 +6,7 @@ import { AntDesign } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
+import config from '../config.json';
 
 const CreateAccountScreen = () => {
   const navigation = useNavigation();
@@ -13,18 +14,23 @@ const CreateAccountScreen = () => {
   const handleCreateAccount = async (values, { setSubmitting }) => {
     try {
       // Your create account logic here
-      const response = await axios.post('your_backend_endpoint', values);
+       
+      const response = await axios.post(config.signUpURL, {
+        email: values.email,
+        name: values.fullName,
+        password: values.password,
+      });
       console.log(response.data); // Log the response for testing
       Toast.show({
         type: 'success',
         text1: 'Account created successfully',
       });
-      navigation.navigate('Profile');
+      navigation.navigate('Login');
     } catch (error) {
-      console.error(error);
+      console.log(error.response);
       Toast.show({
         type: 'error',
-        text1: 'Error creating account',
+        text1: error.response.data || 'Error creating account',
       });
     } finally {
       setSubmitting(false);
@@ -78,6 +84,7 @@ const CreateAccountScreen = () => {
                   onChangeText={handleChange('fullName')}
                   onBlur={handleBlur('fullName')}
                   value={values.fullName}
+                  autoCapitalize='none'
                   style={styles.input}
                 />
               </View>
@@ -89,6 +96,7 @@ const CreateAccountScreen = () => {
                   onBlur={handleBlur('username')}
                   value={values.username}
                   style={styles.input}
+                  autoCapitalize='none'
                 />
               </View>
               {errors.username && touched.username && <Text style={styles.errorText}>{errors.username}</Text>}
@@ -99,6 +107,7 @@ const CreateAccountScreen = () => {
                   onBlur={handleBlur('password')}
                   value={values.password}
                   style={styles.input}
+                  autoCapitalize='none'
                   secureTextEntry
                 />
               </View>
@@ -111,6 +120,7 @@ const CreateAccountScreen = () => {
                   onBlur={handleBlur('confirmPassword')}
                   value={values.confirmPassword}
                   style={styles.input}
+                  autoCapitalize='none'
                   secureTextEntry
                 />
               </View>

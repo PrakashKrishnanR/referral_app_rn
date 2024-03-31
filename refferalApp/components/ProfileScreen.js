@@ -1,7 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Switch,Image,StatusBar, TouchableOpacity, Platform, SafeAreaView } from 'react-native';
+import React, { useState,useEffect } from 'react';
+import { View, Text, StyleSheet, Switch,Image,StatusBar, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons, FontAwesome } from '@expo/vector-icons';
-import Constants from 'expo-constants'; // For status bar height
+import { StorageService } from '../services/StorageService';
+import axios from 'axios';
+import config from '../config.json';
+import * as Clipboard from 'expo-clipboard';
+import Toast from 'react-native-toast-message';
+
+const LoadingIndicator = () => {
+  return (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" />
+      {/* Add any additional loading indicators or text if desired */}
+    </View>
+  );
+};
 
 export default function ProfilePage({navigation}) {
 
@@ -14,6 +27,67 @@ export default function ProfilePage({navigation}) {
     username: 'JohnDoe',
     avatar: 'https://via.placeholder.com/150', // Replace with actual image url
     };
+
+  const [userName, setUserName] = useState(null);
+  const [isReady, setIsReady] = useState(false);
+  const generateReferralCode = async () => {
+    try {
+      // Replace 'your-backend-endpoint' with your actual backend URL
+      const authToken = await StorageService.getValue('userToken');
+      const response = await axios.get(config.referralURL,{
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      console.log(response.data); // Log the response for testing
+      // Assuming the JWT token is in the response data with key 'token'
+      const shortLink = `${config.clipboardURL}${response.data}`;
+
+      console.log(shortLink);
+
+      Clipboard.setStringAsync(shortLink);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Referral URL copied to clipboard',
+      });
+    } catch (error) {
+      // Displaying error message using toast
+      console.log(error.response.data);
+      const errorMessage = error.response?.data || 'Login failed. Please try again.';
+      Toast.show({
+        type: 'error',
+        text1: 'Unable to generate referral code',
+        text2: errorMessage,
+      });
+      actions.setSubmitting(false); // Set submitting to false on error
+    }
+  };
+
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const storedData = await StorageService.getValue('userName');
+        if (storedData !== null) {
+          // If we have data, parse it and set it to state
+          setUserName(storedData);
+        }
+        setIsReady(true); // Indicate that the component is ready to render
+      } catch (e) {
+        // Handle read error
+        console.log("Error reading the data", e);
+      }
+    };
+
+    loadData();
+  }, []); // Empty dependency array ensures this runs once on mount
+
+  if (!isReady) {
+    // You can return a loading indicator, or null to render nothing
+    return <LoadingIndicator />;
+  }
 
   return (
     
@@ -30,7 +104,7 @@ export default function ProfilePage({navigation}) {
       </View>
       <View style={styles.profileSection}>
         <Image style={styles.avatar} source={require('../assets/user.png')} />
-        <Text style={styles.username}>{userData.username}</Text>
+        <Text style={styles.username}>{userName}</Text>
       </View>
       <View style={styles.content}>
         <Text style={styles.sectionTitle}>General Settings</Text>
@@ -70,7 +144,7 @@ export default function ProfilePage({navigation}) {
           <Text style={styles.settingText}>Privacy Policy</Text>
           <MaterialCommunityIcons name="chevron-right" size={24} color="black"  />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.setting}>
+        <TouchableOpacity style={styles.setting} onPress={()=> generateReferralCode()}>
           <MaterialIcons name="share" size={24} color="black" />
           <Text style={styles.settingText}>Share This App</Text>
           <MaterialCommunityIcons name="chevron-right" size={24} color="black"  />

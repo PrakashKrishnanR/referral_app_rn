@@ -1,0 +1,8 @@
+{
+    "signUpURL": "http://localhost:8080/auth/signup",
+    "loginURL": "http://localhost:8080/auth/login",
+    "validateTokenURL": "http://localhost:8080/auth/validateToken",
+    "offerPDFURL": "http://localhost:8080/document/offer/latest",
+    "referralURL": "http://localhost:8080/referral/get",
+    "clipboardURL": "http://localhost:8080/auth/updateReferral/"
+}

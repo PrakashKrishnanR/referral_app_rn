@@ -1,12 +1,14 @@
-import React,{useState} from 'react';
+import React,{useState, useContext} from 'react';
 import { View, StyleSheet, TouchableWithoutFeedback, Image, TouchableOpacity } from 'react-native';
 import { TextInput, Button, Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons'; // Import icons from Expo
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
+import config from '../config.json';
+import { StorageService } from '../services/StorageService';
+import { AuthContext } from '../services/AuthContext';
 
 const CustomCheckbox = ({ isChecked, onCheckChange, label }) => {
     return (
@@ -60,29 +62,34 @@ const LoginSchema = Yup.object().shape({
   
 const LoginScreen = ({navigation}) => {
     const [checked, setChecked] = useState(false);
-
+    const { signIn } = useContext(AuthContext);
   const handleCheckChange = () => {
     setChecked(!checked);
   };
   const handleLogin = async (values, actions) => {
     try {
       // Replace 'your-backend-endpoint' with your actual backend URL
-      const response = await axios.post('http://localhost:8090/api/login', {
+      const response = await axios.post(config.loginURL, {
         email: values.email,
         password: values.password,
       });
 
+      console.log(response.data); // Log the response for testing
       // Assuming the JWT token is in the response data with key 'token'
-      const jwtToken = response.data.token;
-      await AsyncStorage.setItem('userToken', jwtToken);
-
+      const jwtToken = response.data.accessToken;
+      StorageService.storeValue('userToken', jwtToken);
+      StorageService.storeValue('userEmail', response.data.email);
+      StorageService.storeValue('userName', response.data.username);
+      signIn(jwtToken);
       Toast.show({
         type: 'success',
         text1: 'Login successful!',
       });
+      navigation.navigate('Offers');
     } catch (error) {
       // Displaying error message using toast
-      const errorMessage = error.response?.data?.message || 'Login failed. Please try again.';
+      console.log(error.response.data);
+      const errorMessage = error.response?.data || 'Login failed. Please try again.';
       Toast.show({
         type: 'error',
         text1: 'Login error',
@@ -133,6 +140,7 @@ const LoginScreen = ({navigation}) => {
                   onBlur={handleBlur('password')}
                   value={values.password}
                   style={styles.input}
+                  autoCapitalize='none'
                   secureTextEntry
                   />
             </View>

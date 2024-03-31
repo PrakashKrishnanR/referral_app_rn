@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import AuthContext, { AuthProvider } from './services/AuthContext';

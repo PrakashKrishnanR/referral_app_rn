@@ -4,10 +4,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { AuthContext, AuthProvider } from '../services/AuthContext';
 
 const LoadingScreen = ({navigation}) => {
-    const { user } = useContext(AuthContext);
+    const { user } =  useContext(AuthContext);
 
   useEffect(() => {
-    navigation.navigate(user ? 'Offers' : 'Profile');
+    console.log('Inside loading screen :', user);
+    navigation.navigate(user ? 'Offers' : 'Login');
   }, [user, navigation]);
 
   return (
